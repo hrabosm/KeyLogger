@@ -1,0 +1,10 @@
+# Visual studio folders
+
+/.vs/
+/.vscode/
+
+# Executables and stuff
+
+*.exe
+*.bat
+*.txt
